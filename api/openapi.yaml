@@ -1,0 +1,486 @@
+openapi: 3.0.0
+info:
+  title: Monkey Messenger API
+  version: 1.0.0
+servers:
+- url: https://monkeymessanger.com/v1/
+paths:
+  /auth/register:
+    post:
+      tags:
+      - Auth
+      summary: Регистрация нового пользователя
+      operationId: authRegisterPOST
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/auth_register_body"
+        required: true
+      responses:
+        "201":
+          description: Пользователь успешно зарегистрирован
+        "400":
+          description: Ошибка валидации данных
+      x-swagger-router-controller: Auth
+  /auth/login:
+    post:
+      tags:
+      - Auth
+      summary: Вход в систему
+      operationId: authLoginPOST
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/auth_login_body"
+        required: true
+      responses:
+        "200":
+          description: "Успешный вход, возвращает токен"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/inline_response_200"
+        "401":
+          description: Неверные учетные данные
+      x-swagger-router-controller: Auth
+  /auth/logout:
+    post:
+      tags:
+      - Auth
+      summary: Выход из системы
+      operationId: authLogoutPOST
+      parameters:
+      - name: Authorization
+        in: header
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+          example: token
+      responses:
+        "200":
+          description: Успешный выход
+        "401":
+          description: Неавторизованный доступ
+      security:
+      - bearerAuth: []
+      x-swagger-router-controller: Auth
+  /auth/refresh:
+    post:
+      tags:
+      - Auth
+      summary: Обновление токена
+      operationId: authRefreshPOST
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/auth_refresh_body"
+        required: true
+      responses:
+        "200":
+          description: Токен успешно обновлен
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/inline_response_200_4"
+        "400":
+          description: Неверный или просроченный refresh_token
+        "401":
+          description: Неавторизованный доступ
+      x-swagger-router-controller: Auth
+  /auth/password-reset:
+    post:
+      tags:
+      - Auth
+      summary: Запрос на сброс пароля
+      operationId: authPassword_resetPOST
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/auth_passwordreset_body"
+        required: true
+      responses:
+        "200":
+          description: Инструкция по сбросу отправлена
+        "404":
+          description: Пользователь не найден
+      x-swagger-router-controller: Auth
+  /auth/password-reset/confirm:
+    post:
+      tags:
+      - Auth
+      summary: Подтверждение сброса пароля
+      operationId: authPassword_resetConfirmPOST
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/passwordreset_confirm_body"
+        required: true
+      responses:
+        "200":
+          description: Пароль успешно изменен
+        "400":
+          description: Неверный или просроченный токен
+      x-swagger-router-controller: Auth
+  /chats:
+    get:
+      tags:
+      - Chats
+      summary: Получить список чатов пользователя
+      operationId: chatsGET
+      parameters:
+      - name: Authorization
+        in: header
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+          example: token
+      responses:
+        "200":
+          description: "Успешный запрос, возвращает список чатов"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/inline_response_200_1"
+                x-content-type: application/json
+      security:
+      - bearerAuth: []
+      x-swagger-router-controller: Chats
+    post:
+      tags:
+      - Chats
+      summary: Создать новый чат
+      operationId: chatsPOST
+      parameters:
+      - name: Authorization
+        in: header
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+          example: token
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/chats_body"
+        required: true
+      responses:
+        "201":
+          description: Чат успешно создан
+        "400":
+          description: Ошибка валидации
+      security:
+      - bearerAuth: []
+      x-swagger-router-controller: Chats
+  /chats/{chat_id}:
+    delete:
+      tags:
+      - Chats
+      summary: Удалить чат
+      operationId: chatsChat_idDELETE
+      parameters:
+      - name: chat_id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+          example: token
+      responses:
+        "200":
+          description: Чат удален
+        "404":
+          description: Чат не найден
+      security:
+      - bearerAuth: []
+      x-swagger-router-controller: Chats
+  /chats/{chat_id}/messages:
+    get:
+      tags:
+      - Messages
+      summary: Получить список сообщений чата
+      operationId: chatsChat_idMessagesGET
+      parameters:
+      - name: chat_id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+          example: token
+      responses:
+        "200":
+          description: Возвращает список сообщений
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/inline_response_200_2"
+                x-content-type: application/json
+      security:
+      - bearerAuth: []
+      x-swagger-router-controller: Messages
+    post:
+      tags:
+      - Messages
+      summary: Отправить сообщение в чат
+      operationId: chatsChat_idMessagesPOST
+      parameters:
+      - name: chat_id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+          example: token
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/chat_id_messages_body"
+        required: true
+      responses:
+        "201":
+          description: Сообщение отправлено
+      security:
+      - bearerAuth: []
+      x-swagger-router-controller: Messages
+  /chats/{chat_id}/messages/{message_id}:
+    delete:
+      tags:
+      - Messages
+      summary: Удалить сообщение
+      operationId: chatsChat_idMessagesMessage_idDELETE
+      parameters:
+      - name: chat_id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: message_id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+          example: token
+      responses:
+        "200":
+          description: Сообщение удалено
+        "404":
+          description: Сообщение не найдено
+      security:
+      - bearerAuth: []
+      x-swagger-router-controller: Messages
+  /users:
+    get:
+      tags:
+      - Users
+      summary: Получить список пользователей
+      operationId: usersGET
+      parameters:
+      - name: Authorization
+        in: header
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+          example: token
+      responses:
+        "200":
+          description: Возвращает список пользователей
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/inline_response_200_3"
+                x-content-type: application/json
+      security:
+      - bearerAuth: []
+      x-swagger-router-controller: Users
+  /users/{user_id}:
+    get:
+      tags:
+      - Users
+      summary: Получить данные пользователя
+      operationId: usersUser_idGET
+      parameters:
+      - name: user_id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+          example: token
+      responses:
+        "200":
+          description: Информация о пользователе
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/inline_response_200_3"
+        "404":
+          description: Пользователь не найден
+      security:
+      - bearerAuth: []
+      x-swagger-router-controller: Users
+components:
+  schemas:
+    auth_register_body:
+      type: object
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+    chat_id_messages_body:
+      type: object
+      properties:
+        text:
+          type: string
+    passwordreset_confirm_body:
+      type: object
+      properties:
+        token:
+          type: string
+        new_password:
+          type: string
+    inline_response_200_1:
+      type: object
+      properties:
+        chat_id:
+          type: string
+        name:
+          type: string
+      example:
+        name: name
+        chat_id: chat_id
+    chats_body:
+      type: object
+      properties:
+        name:
+          type: string
+        user_id:
+          type: string
+    auth_login_body:
+      type: object
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+    inline_response_200:
+      type: object
+      properties:
+        token:
+          type: string
+      example:
+        token: token
+    inline_response_200_2:
+      type: object
+      properties:
+        message_id:
+          type: string
+        sender_id:
+          type: string
+        text:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+      example:
+        message_id: message_id
+        text: text
+        sender_id: sender_id
+        timestamp: 2000-01-23T04:56:07.000+00:00
+    inline_response_200_3:
+      type: object
+      properties:
+        user_id:
+          type: string
+        username:
+          type: string
+      example:
+        user_id: user_id
+        username: username
+    auth_passwordreset_body:
+      type: object
+      properties:
+        email:
+          type: string
+    auth_refresh_body:
+      type: object
+      properties:
+        refresh_token:
+          type: string
+    inline_response_200_4:
+      type: object
+      properties:
+        token:
+          type: string
+      example:
+        token: token
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
